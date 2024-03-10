@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  overflow: hidden; /* This disables scrolling */
+}
+
+.gradient-fade::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    white 0%, 
+    transparent 15%, 
+    transparent 85%, 
+    white 100%
+  );
+  pointer-events: none;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px; /* Width and height of the slider thumb */
+  height: 15px;
+  background: #CFF940; /* Slider thumb color */
+  cursor: pointer;
+  border-radius: 50%; /* Makes the slider thumb circular */
+}
+
+/* Styling for Webkit browsers */
+.chat-container::-webkit-scrollbar {
+  width: 5px; /* Adjust the width of the scrollbar */
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f0f0f0; /* Color of the track */
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1; /* Color of the scrollbar thumb */
+  border-radius: 5px; /* Rounded corners for the thumb */
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; /* Color of the thumb on hover */
+}
+
+/* Styling for Firefox */
+.chat-container {
+  
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #c1c1c1 #f0f0f0; /* thumb and track color */
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 2s steps(40, end) 1s forwards;
+  /* Adjust the duration above (2s here) to control the speed of the typing effect */
+}
+
+.typewriter-dot {
+  font-weight: bold;
+  color: black;
+}
