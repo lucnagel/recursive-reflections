@@ -53,6 +53,15 @@ function renderTextWithLineBreaks(text: string) {
   );
 }
 
+function convertFileToBase64(file: Blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // Define the structure of a message
 type Message = {
   role: "assistant" | "system" | "user";
@@ -81,6 +90,27 @@ function ChatContainer() {
   const [feedbackIntensity, setFeedbackIntensity] = useState<number>(5); // State for slider value
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
+
+  const generateImageVariation = async (file: Blob) => {
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+      reader.onloadend = async () => {
+        try {
+          const base64Image = reader.result;
+          const response = await axios.post('https://api.openai.com/v1/images/variations', { image: base64Image });
+          if (response.data.success) {
+            resolve(response.data.variationImageUrl);
+          } else {
+            reject(new Error('Image variation generation failed'));
+          }
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }; 
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,42 +163,26 @@ function ChatContainer() {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const generateDalleImage = async (prompt: any) => {
-    try {
-      const response = await axios.post("https://api.openai.com/v1/images/generations", { prompt });
-      // Assuming '/api/generate-image' is your endpoint for DALL-E image generation
-      const generatedImage = response.data.image; // Adapt based on the actual response format
-  
-      // Update chat with the generated image
-      const imageMessage: Message = {
-        role: "system", // or "assistant", adjust as needed
-        content: [{
-          type: "image_url",
-          image_url: { url: generatedImage },
-        }],
-      };
-      setMessages((prevMessages) => [...prevMessages, imageMessage]);
-    } catch (error) {
-      console.error('Failed to generate image:', error);
-      // Handle the error appropriately
-    }
-  };
-  
   const sendMessage = async () => {
     setIsSending(true); // Disable send and upload buttons
 
+  // Map over images to generate variations
+  const imageVariationPromises = images.map(file => generateImageVariation(file));
+  
+  // Wait for all image variations to be generated
+  const imageVariationUrls = await Promise.all(imageVariationPromises);
+
     // Create the content array for the new user message
-    const newUserMessageContent: MessageContent[] = [
+    const newUserMessageContent = [
       {
-        type: "text" as const,
+        type: "text",
         text: message,
       },
-      ...images.map((file) => ({
-        type: "image_url" as const,
-        // Temporary URLs for rendering - will be replaced by the backend response
-        image_url: { url: URL.createObjectURL(file) },
+      ...imageVariationUrls.map(url => ({
+        type: "image_url",
+        image_url: { url },
       })),
-    ];
+    ];  
 
     // Create a new user message object
     const newUserMessage: Message = {
@@ -212,8 +226,6 @@ function ChatContainer() {
 
       if (!response.data.success) {
         toast.error(response.data.error);
-        const descriptionText = response.data.description;
-        generateDalleImage(descriptionText);
       }
 
       const newMessage = {
