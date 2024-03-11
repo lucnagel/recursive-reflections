@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Creative Feedback Simulator",
+  title: "Recursive Reflections v.0.1.1",
   description: "Upload your image to receive feedback.",
 };
 
