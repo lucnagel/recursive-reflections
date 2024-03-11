@@ -1,5 +1,6 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
+import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 // Define the schema for text content
@@ -29,6 +30,41 @@ const messageSchema = z.object({
 const chatRequestSchema = z.object({
   messages: z.array(messageSchema),
 });
+
+
+const dallePromptSchema = z.object({
+  type: z.literal("dalle_prompt"),
+  prompt: z.string(),
+});
+
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+  // Validate the request body against the dallePromptSchema
+  const result = dallePromptSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid request data' });
+  }
+
+  const { prompt } = result.data;
+
+  try {
+    const response = await axios.post('https://api.openai.com/v1/images/generations', {
+      prompt: prompt,
+      n: 1, // Number of images to generate
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      }
+    });
+
+    // Send back the generated image or image URL as part of the response
+    res.status(200).json({ image: response.data });
+  } catch (error) {
+    console.error('Error calling DALL-E API:', error);
+    res.status(500).json({ error: 'Failed to generate image' });
+  }
+};
+
+export default handler;
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions" as const;
 
