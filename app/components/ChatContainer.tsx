@@ -284,7 +284,7 @@ function ChatContainer() {
   <div {...getRootProps()} className="flex text-sm flex-col items-center justify-center border-dashed border-2 border-gray-300 rounded-md p-4">
     <input {...getInputProps()} disabled={isSending} />
     {isSending ? (
-      <p>Analyzing image...</p> // Text shown when image is being sent
+      <p>Analyzing image.</p> // Text shown when image is being sent
     ) : (
       <p>Drag & drop an image, or click here to upload a file.</p> // Default text
     )}
