@@ -31,40 +31,34 @@ const chatRequestSchema = z.object({
   messages: z.array(messageSchema),
 });
 
-
-const dallePromptSchema = z.object({
+const dallESchema = z.object({
   type: z.literal("dalle_prompt"),
   prompt: z.string(),
 });
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  // Validate the request body against the dallePromptSchema
-  const result = dallePromptSchema.safeParse(req.body);
-  if (!result.success) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Validate request body against schema
+  const validationResult = dallESchema.safeParse(req.body);
+  if (!validationResult.success) {
     return res.status(400).json({ error: 'Invalid request data' });
   }
 
-  const { prompt } = result.data;
-
   try {
-    const response = await axios.post('https://api.openai.com/v1/images/generations', {
-      prompt: prompt,
-      n: 1, // Number of images to generate
-    }, {
+    // Configuration for Dall-E API request
+    const response = await axios.post("https://api.openai.com/v1/images/generations", req.body, {
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      }
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        // Include other necessary headers
+      },
     });
 
-    // Send back the generated image or image URL as part of the response
-    res.status(200).json({ image: response.data });
+    // Respond with Dall-E API's response
+    res.status(200).json(response.data);
   } catch (error) {
-    console.error('Error calling DALL-E API:', error);
-    res.status(500).json({ error: 'Failed to generate image' });
+    console.error('Dall-E API request failed:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-};
-
-export default handler;
+}
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions" as const;
 
