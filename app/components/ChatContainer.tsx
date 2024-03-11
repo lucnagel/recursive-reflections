@@ -139,6 +139,7 @@ function ChatContainer() {
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
       'image/png': ['.png'],
+      'image/gif': ['.gif'],
     },
     multiple: true
   });
