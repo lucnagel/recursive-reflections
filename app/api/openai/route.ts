@@ -31,35 +31,6 @@ const chatRequestSchema = z.object({
   messages: z.array(messageSchema),
 });
 
-const dallESchema = z.object({
-  type: z.literal("dalle_prompt"),
-  prompt: z.string(),
-});
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Validate request body against schema
-  const validationResult = dallESchema.safeParse(req.body);
-  if (!validationResult.success) {
-    return res.status(400).json({ error: 'Invalid request data' });
-  }
-
-  try {
-    // Configuration for Dall-E API request
-    const response = await axios.post("https://api.openai.com/v1/images/generations", req.body, {
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        // Include other necessary headers
-      },
-    });
-
-    // Respond with Dall-E API's response
-    res.status(200).json(response.data);
-  } catch (error) {
-    console.error('Dall-E API request failed:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
-
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions" as const;
 
 export async function POST(request: Request) {
