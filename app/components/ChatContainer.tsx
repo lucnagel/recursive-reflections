@@ -129,29 +129,13 @@ function ChatContainer() {
     setFeedbackIntensity(Number(event.target.value)); // Update slider value
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setImages((prevImages) => {
-        // Calculate how many new images we can add
-        const availableSlots = 5 - prevImages.length;
-        const newImages = filesArray.slice(0, availableSlots);
-        return [...prevImages, ...newImages];
-      });
-    }
-  };
-
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-  };
-
   const generateDalleImage = async (prompt: any) => {
     try {
-      const response = await axios.post('/api/generate-image', { prompt });
+      const response = await axios.post("https://api.openai.com/v1/images/generations", { prompt });
       // Assuming '/api/generate-image' is your endpoint for DALL-E image generation
       const generatedImage = response.data.image; // Adapt based on the actual response format
   
@@ -169,7 +153,6 @@ function ChatContainer() {
       // Handle the error appropriately
     }
   };
-  
   
   const sendMessage = async () => {
     setIsSending(true); // Disable send and upload buttons
