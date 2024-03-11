@@ -193,7 +193,7 @@ function ChatContainer() {
         {
           role: "user",
           content: [
-            { type: "text", text: `Describe this image as though you're an art director responding to an email, your name is ARTIE. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Keep it short, limit your response to maximum 1250 characters. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`},
+            { type: "text", text: `Describe this image as though you're an art director responding to an email, your name is ARTIE. Keep it short, limit your response to maximum 1250 characters. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`},
             ...imageBase64Strings.map((base64) => ({
               type: "image_url",
               image_url: { url: base64 },
