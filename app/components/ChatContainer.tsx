@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPaperclip,
-  faArrowRight,
+  faArrowUp,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
@@ -216,7 +216,7 @@ function ChatContainer() {
       };
       setMessages((prevMessages) => [...prevMessages, newMessage]);
     } catch (error) {
-      toast.error("Failed to send message");
+      toast.error("Failed to upload file. Please try again.");
       // Optionally remove the user message if sending fails or handle the error as needed
     } finally {
       // Clear the message and images state, regardless of whether the send was successful
@@ -314,7 +314,7 @@ function ChatContainer() {
     {isSending ? (
       <FontAwesomeIcon icon={faSpinner} className="h-5 w-5 fa-spin" />
     ) : (
-      <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5" />
+      <FontAwesomeIcon icon={faArrowUp} className="h-5 w-5" />
     )}
   </button>
 </div>
