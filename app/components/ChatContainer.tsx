@@ -4,7 +4,6 @@ import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faPaperclip,
   faArrowUp,
   faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
@@ -150,6 +149,28 @@ function ChatContainer() {
     setMessage(e.target.value);
   };
 
+  const generateDalleImage = async (prompt: any) => {
+    try {
+      const response = await axios.post('/api/generate-image', { prompt });
+      // Assuming '/api/generate-image' is your endpoint for DALL-E image generation
+      const generatedImage = response.data.image; // Adapt based on the actual response format
+  
+      // Update chat with the generated image
+      const imageMessage: Message = {
+        role: "system", // or "assistant", adjust as needed
+        content: [{
+          type: "image_url",
+          image_url: { url: generatedImage },
+        }],
+      };
+      setMessages((prevMessages) => [...prevMessages, imageMessage]);
+    } catch (error) {
+      console.error('Failed to generate image:', error);
+      // Handle the error appropriately
+    }
+  };
+  
+  
   const sendMessage = async () => {
     setIsSending(true); // Disable send and upload buttons
 
@@ -208,6 +229,8 @@ function ChatContainer() {
 
       if (!response.data.success) {
         toast.error(response.data.error);
+        const descriptionText = response.data.description;
+        generateDalleImage(descriptionText);
       }
 
       const newMessage = {
