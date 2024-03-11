@@ -35,8 +35,6 @@ function Typewriter({ text, speed = 35 }: { text: string; speed?: number }) {
   );
 }
 
-// Function to add a line break after the first two sentences in a text
-
 function renderTextWithLineBreaks(text: string) {
   // Split the text by newline characters
   const textSegments = text.split('\n');
@@ -51,15 +49,6 @@ function renderTextWithLineBreaks(text: string) {
       ))}
     </>
   );
-}
-
-function convertFileToBase64(file: Blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-    reader.readAsDataURL(file);
-  });
 }
 
 // Define the structure of a message
@@ -150,13 +139,12 @@ function ChatContainer() {
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
       'image/png': ['.png'],
-      // Add other MIME types as needed
     },
     multiple: true
   });
 
   const handleIntensityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFeedbackIntensity(Number(event.target.value)); // Update slider value
+    setFeedbackIntensity(Number(event.target.value));
   };
 
   const removeImage = (index: number) => {
@@ -166,23 +154,18 @@ function ChatContainer() {
   const sendMessage = async () => {
     setIsSending(true); // Disable send and upload buttons
 
-  // Map over images to generate variations
-  const imageVariationPromises = images.map(file => generateImageVariation(file));
-  
-  // Wait for all image variations to be generated
-  const imageVariationUrls = await Promise.all(imageVariationPromises);
-
     // Create the content array for the new user message
-    const newUserMessageContent = [
+    const newUserMessageContent: MessageContent[] = [
       {
-        type: "text",
+        type: "text" as const,
         text: message,
       },
-      ...imageVariationUrls.map(url => ({
-        type: "image_url",
-        image_url: { url },
+      ...images.map((file) => ({
+        type: "image_url" as const,
+        // Temporary URLs for rendering - will be replaced by the backend response
+        image_url: { url: URL.createObjectURL(file) },
       })),
-    ];  
+    ];
 
     // Create a new user message object
     const newUserMessage: Message = {
@@ -336,9 +319,7 @@ function ChatContainer() {
     )}
   </button>
 </div>
-
-
-      </div>
+</div>
   );
 }
 export default ChatContainer;
