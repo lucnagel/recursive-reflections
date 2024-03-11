@@ -80,27 +80,6 @@ function ChatContainer() {
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
 
-  const generateImageVariation = async (file: Blob) => {
-    const reader = new FileReader();
-    return new Promise((resolve, reject) => {
-      reader.onloadend = async () => {
-        try {
-          const base64Image = reader.result;
-          const response = await axios.post('https://api.openai.com/v1/images/variations', { image: base64Image });
-          if (response.data.success) {
-            resolve(response.data.variationImageUrl);
-          } else {
-            reject(new Error('Image variation generation failed'));
-          }
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
-  }; 
-
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]); // Dependency array includes messages to trigger scroll on update
@@ -139,7 +118,6 @@ function ChatContainer() {
     accept: {
       'image/jpeg': ['.jpeg', '.jpg'],
       'image/png': ['.png'],
-      'image/gif': ['.gif'],
     },
     multiple: true
   });
@@ -282,29 +260,34 @@ function ChatContainer() {
   <div ref={endOfMessagesRef as React.RefObject<HTMLDivElement>} />
 </div>
       {/* Image preview row */}
-      <div className="p-4 mx-auto">
-        {images.map((image, index) => (
-          <div key={index} className="relative inline-block">
-            <img
-              src={URL.createObjectURL(image)}
-              alt={`upload-preview ${index}`}
-              className="h-16 w-16 object-cover rounded-lg mr-2"
-            />
-            <button
-              onClick={() => removeImage(index)}
-              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs"
-            >
-              &times;
-            </button>
-          </div>
-        ))}
+      {!isSending && (
+  <div className="p-4 mx-auto">
+    {images.map((image, index) => (
+      <div key={index} className="relative inline-block">
+        <img
+          src={URL.createObjectURL(image)}
+          alt={`upload-preview ${index}`}
+          className="h-16 w-16 object-cover rounded-lg mr-2"
+        />
+        <button
+          onClick={() => removeImage(index)}
+          className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs"
+        >
+          &times;
+        </button>
       </div>
+    ))}
+  </div>
+)}
       {/* Input area */}
       <div className="flex flex-row items-center justify-center">
   <div {...getRootProps()} className="flex text-sm flex-col items-center justify-center border-dashed border-2 border-gray-300 rounded-md p-4">
     <input {...getInputProps()} disabled={isSending} />
-    <p>Drag & drop an image, or click here to upload a file.</p>
-    {/* Optionally, display file previews here */}
+    {isSending ? (
+      <p>Analyzing image...</p> // Text shown when image is being sent
+    ) : (
+      <p>Drag & drop an image, or click here to upload a file.</p> // Default text
+    )}
   </div>
 
   <button
