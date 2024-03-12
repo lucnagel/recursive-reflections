@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useRef, ChangeEvent } from "react";
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -97,63 +97,6 @@ function ChatContainer() {
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
   const [selectedGPTStyle, setSelectedGPTStyle] = useState('ARTIE'); // default to ARTIE
 
-  // Function to play audio from a blob URL
-  const playAudioFromBlob = (blobUrl: string | undefined) => {
-    const audio = new Audio(blobUrl);
-    audio.play();
-  };
-
-  // Function to fetch and play speech from text
-  const fetchAndPlaySpeech = async (text: any) => {
-    try {
-      // Replace `/api/speech` with your actual API endpoint
-      const response = await axios.post('/api/speech', { text });
-      const blob = new Blob([response.data], { type: 'audio/mp3' });
-      const blobUrl = URL.createObjectURL(blob);
-      playAudioFromBlob(blobUrl);
-    } catch (error) {
-      console.error('Error fetching speech:', error);
-    }
-  };
-
-  // Function to fetch images based on message
-      const fetchImageForMessage = async (message: { role?: "assistant" | "system" | "user"; content?: MessageContent[]; text?: any; id?: any; }) => {
-        const prompt = message.text; // Assuming the message object has a text property
-        const options = {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ prompt, n: 1, size: "1024x1024" }) // Adjust based on your needs
-        };
-
-        try {
-            const response = await fetch("https://api.openai.com/v1/images/generations", options);
-            const data = await response.json();
-            if (data && data.data && data.data.length > 0) {
-                setImages(prevImages => ({ ...prevImages, [message.id]: data.data[0].url }));
-            }
-        } catch (error) {
-            console.error("Failed to fetch image:", error);
-        }
-    };
-
-    // Effect to fetch images when messages update
-    useEffect(() => {
-        messages.forEach(message => {
-            if (!images[message.id]) { // Check if image hasn't been fetched for this message
-                fetchImageForMessage(message);
-            }
-        });
-    }, [messages]); // Re-run effect if messages change
-  
-
-const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-  setSelectedGPTStyle(event.target.value);
-};
-
-
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]); // Dependency array includes messages to trigger scroll on update
@@ -220,18 +163,6 @@ const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<str
       })),
     ];
 
-    // Create a new user message object
-    const newUserMessage: Message = {
-      role: "user",
-      content: newUserMessageContent as (TextContent | ImageContent)[],
-      id: undefined,
-      text: function (text: any): void {
-      }
-    };
-
-    // Update the messages state to include the new user message
-    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
-
     // Convert images to base64 strings for the backend
     const imagePromises = images.map((file) => {
       return new Promise<string>((resolve, reject) => {
@@ -287,6 +218,10 @@ const payload = {
       setIsSending(false); // Re-enable send and upload buttons
     }
   };
+
+  function handleGPTStyleChange(event: ChangeEvent<HTMLSelectElement>): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
   <div className="flex flex-col h-full">
