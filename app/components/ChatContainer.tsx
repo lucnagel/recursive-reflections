@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState, useEffect, useRef, ChangeEvent } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,9 +9,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Knob } from 'primereact/knob';
 
-function Typewriter({ text, speed = 25 }: { text: string; speed?: number }) {
+function Typewriter({ text, speed = 35 }: { text: string; speed?: number }) {
   const [displayedText, setDisplayedText] = useState('');
   const [index, setIndex] = useState(0);
 
@@ -37,13 +36,15 @@ function Typewriter({ text, speed = 25 }: { text: string; speed?: number }) {
 }
 
 function renderTextWithLineBreaks(text: string) {
+  // Split the text by newline characters
   const textSegments = text.split('\n');
+  // Render the segments with <br /> tags for line breaks
   return (
     <>
       {textSegments.map((segment, index) => (
         <React.Fragment key={index}>
-          <span className={index === 0 ? 'first-line' : ''}>{segment}</span>
-          {index < textSegments.length - 1 && <br />}
+          {segment}
+          {(index as number) < textSegments.length - 1 && <br />}
         </React.Fragment>
       ))}
     </>
@@ -52,7 +53,6 @@ function renderTextWithLineBreaks(text: string) {
 
 // Define the structure of a message
 type Message = {
-  text(text: any): unknown;
   id: any;
   role: "assistant" | "system" | "user";
   content: MessageContent[];
@@ -96,6 +96,43 @@ function ChatContainer() {
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
   const [selectedGPTStyle, setSelectedGPTStyle] = useState('ARTIE'); // default to ARTIE
+      // Function to fetch images based on message
+      const fetchImageForMessage = async (message: { role?: "assistant" | "system" | "user"; content?: MessageContent[]; text?: any; id?: any; }) => {
+        const prompt = message.text; // Assuming the message object has a text property
+        const options = {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ prompt, n: 1, size: "1024x1024" }) // Adjust based on your needs
+        };
+
+        try {
+            const response = await fetch("https://api.openai.com/v1/images/generations", options);
+            const data = await response.json();
+            if (data && data.data && data.data.length > 0) {
+                setImages(prevImages => ({ ...prevImages, [message.id]: data.data[0].url }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch image:", error);
+        }
+    };
+
+    // Effect to fetch images when messages update
+    useEffect(() => {
+        messages.forEach(message => {
+            if (!images[message.id]) { // Check if image hasn't been fetched for this message
+                fetchImageForMessage(message);
+            }
+        });
+    }, [messages]); // Re-run effect if messages change
+  
+
+const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+  setSelectedGPTStyle(event.target.value);
+};
+
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,6 +200,16 @@ function ChatContainer() {
       })),
     ];
 
+    // Create a new user message object
+    const newUserMessage: Message = {
+      role: "user",
+      content: newUserMessageContent as (TextContent | ImageContent)[],
+      id: undefined
+    };
+
+    // Update the messages state to include the new user message
+    setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+
     // Convert images to base64 strings for the backend
     const imagePromises = images.map((file) => {
       return new Promise<string>((resolve, reject) => {
@@ -219,10 +266,6 @@ const payload = {
     }
   };
 
-  function handleGPTStyleChange(event: ChangeEvent<HTMLSelectElement>): void {
-    throw new Error("Function not implemented.");
-  }
-
   return (
   <div className="flex flex-col h-full">
     <div className="absolute top-5 text-sm left-5 p-4">
@@ -232,51 +275,45 @@ const payload = {
   </div>
   <div className="absolute top-5 text-sm right-5 p-4">
   universestudio.xyz</div>
+  <div className="absolute left-5 bottom-20 text-sm p-4 mb-1">
+  <span className="text-sm mr-2">Select GPT:</span>
+  <select
+  className="max-w-xs p-2 overflow-auto rounded-lg"
+  aria-label="Default select example"
+  defaultValue="ARTIE"
+  onChange={handleGPTStyleChange}
+>
+  <option value="ARTIE">ARTIE</option>
+  <option value="RORI">RORI</option>
+</select>
 
-  <div className="absolute bottom-5 text-sm left-5 p-4">
-  <div className="flex items-center mb-4">
-    <span className="text-sm mr-2">Select GPT:</span>
-    <select
-      className="max-w-xs p-2 overflow-auto rounded-lg"
-      aria-label="Default select example"
-      defaultValue="ARTIE"
-      onChange={handleGPTStyleChange}
-    >
-      <option value="ARTIE">ARTIE</option>
-      <option value="RORI">RORI</option>
-    </select>
-  </div>
-
-  <div className="flex items-center">
-    <div>
-      <label htmlFor="feedback-intensity-knob" className="block text-sm text-black mb-4">
-          Response Intensity:
-      </label>
-      <div className="flex justify-center">
-        <Knob
-          value={feedbackIntensity}
-          onChange={(e) => setFeedbackIntensity(e.value)}
-          min={1}
-          max={10}
-          size={75}
-          valueColor="#CFF940" 
-          rangeColor="#A9A9A9"
-        />
-      </div>
-    </div>
-  </div>
 </div>
 
+<div className="absolute bottom-5 left-5 p-4">
+  <label htmlFor="feedback-intensity-slider" className="block text-sm text-black">Response Intensity: {feedbackIntensity}</label>
+  <div>
+    <input
+      type="range"
+      id="feedback-intensity-slider"
+      name="feedbackIntensity"
+      min="1"
+      max="10"
+      value={feedbackIntensity}
+      onChange={handleIntensityChange}
+      className="slider-thumb w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-400"
+    />
+  </div>
+</div>
 
 <div className="chat-container flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
   {messages.map((message, idx) => (
     <div key={idx} className={`flex mb-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-      <div className={`rounded-xl p-4 mx-auto w-2/3 ${message.role === "user" ? "text-white" : message.role === "system" ? "bg-white text-white" : "p-8 shadow-lg bg-white text-lg text-black"}`}>
+      <div className={`rounded-lg p-4 mx-auto w-2/3 ${message.role === "user" ? "text-white" : message.role === "system" ? "bg-white text-white" : "p-8 shadow-lg bg-white text-sm text-black"}`}>
         {Array.isArray(message.content) ? (
           message.content.map((content, index) => (
             <React.Fragment key={index}>
               {content.type === "text" && <Typewriter text={content.text} />}
-              {content.type === "image_url" && <img src={content.image_url.url} alt={`Uploaded by ${message.role}`} className="mx-auto h-[60vh] object-cover rounded-xl"/>}
+              {content.type === "image_url" && <img src={content.image_url.url} alt={`Uploaded by ${message.role}`} className="mx-auto h-[60vh] object-cover rounded-lg"/>}
             </React.Fragment>
           ))
         ) : (
@@ -331,7 +368,6 @@ const payload = {
       <FontAwesomeIcon icon={faArrowUp} className="h-5 w-5" />
     )}
   </button>
-  
 </div>
 </div>
   );
