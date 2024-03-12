@@ -176,7 +176,7 @@ const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<str
 // Construct the prompt based on selected GPT style
 const promptText = selectedGPTStyle === 'ARTIE' ?
   `Describe this image as though you're an art director responding to an email, your name is ARTIE. Keep it very short, limit your response to maximum 1000 characters. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.` :
-  `Describe this image as though you're a therapeutic psychoanalyst named RORI. Provide an abstract analysis, focusing on symbolic elements and how they contribute to the overall impression of someone's psyche. Be sure to include comments on shapes, color use, and emotion conveyed. Your critique should not exceed 1000 characters and should be suitable for a professional audience. Your feedback intensity is ${feedbackIntensity}.`;
+  `Describe this image as though you're a therapeutic psychoanalyst, named RORI. Focus on symbolic elements. Be sure to include comments on shapes, color use, and emotion conveyed. Your repsonse should not exceed 1000 characters. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`;
 
 const payload = {
   messages: [
