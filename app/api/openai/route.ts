@@ -1,6 +1,5 @@
 import axios from "axios";
 import { NextResponse } from "next/server";
-import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 // Define the schema for text content
