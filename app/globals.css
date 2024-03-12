@@ -75,3 +75,8 @@ body {
   font-weight: bold;
   color: #CFF940;
 }
+
+.first-line {
+  font-weight: ligther;
+  color: gray;
+}
