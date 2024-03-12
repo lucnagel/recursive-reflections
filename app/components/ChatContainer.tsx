@@ -11,7 +11,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Knob } from 'primereact/knob';
 
-function Typewriter({ text, speed = 35 }: { text: string; speed?: number }) {
+function Typewriter({ text, speed = 25 }: { text: string; speed?: number }) {
   const [displayedText, setDisplayedText] = useState('');
   const [index, setIndex] = useState(0);
 
@@ -31,7 +31,7 @@ function Typewriter({ text, speed = 35 }: { text: string; speed?: number }) {
   return (
     <>
       {renderTextWithLineBreaks(displayedText)}
-      {showDot && <span className="typewriter-dot">â¢</span>}
+      {showDot && <span className="typewriter-dot">•</span>}
     </>
   );
 }
@@ -52,6 +52,7 @@ function renderTextWithLineBreaks(text: string) {
 
 // Define the structure of a message
 type Message = {
+  text(text: any): unknown;
   id: any;
   role: "assistant" | "system" | "user";
   content: MessageContent[];
@@ -95,7 +96,27 @@ function ChatContainer() {
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
   const [selectedGPTStyle, setSelectedGPTStyle] = useState('ARTIE'); // default to ARTIE
-      // Function to fetch images based on message
+
+  // Function to play audio from a blob URL
+  const playAudioFromBlob = (blobUrl: string | undefined) => {
+    const audio = new Audio(blobUrl);
+    audio.play();
+  };
+
+  // Function to fetch and play speech from text
+  const fetchAndPlaySpeech = async (text: any) => {
+    try {
+      // Replace `/api/speech` with your actual API endpoint
+      const response = await axios.post('/api/speech', { text });
+      const blob = new Blob([response.data], { type: 'audio/mp3' });
+      const blobUrl = URL.createObjectURL(blob);
+      playAudioFromBlob(blobUrl);
+    } catch (error) {
+      console.error('Error fetching speech:', error);
+    }
+  };
+
+  // Function to fetch images based on message
       const fetchImageForMessage = async (message: { role?: "assistant" | "system" | "user"; content?: MessageContent[]; text?: any; id?: any; }) => {
         const prompt = message.text; // Assuming the message object has a text property
         const options = {
@@ -203,7 +224,9 @@ const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<str
     const newUserMessage: Message = {
       role: "user",
       content: newUserMessageContent as (TextContent | ImageContent)[],
-      id: undefined
+      id: undefined,
+      text: function (text: any): void {
+      }
     };
 
     // Update the messages state to include the new user message
@@ -274,6 +297,7 @@ const payload = {
   </div>
   <div className="absolute top-5 text-sm right-5 p-4">
   universestudio.xyz</div>
+
   <div className="absolute bottom-5 text-sm left-5 p-4">
   <div className="flex items-center mb-4">
     <span className="text-sm mr-2">Select GPT:</span>
@@ -308,15 +332,16 @@ const payload = {
   </div>
 </div>
 
+
 <div className="chat-container flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
   {messages.map((message, idx) => (
     <div key={idx} className={`flex mb-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-      <div className={`rounded-lg p-4 mx-auto w-2/3 ${message.role === "user" ? "text-white" : message.role === "system" ? "bg-white text-white" : "p-8 shadow-lg bg-white text-lg text-black"}`}>
+      <div className={`rounded-xl p-4 mx-auto w-2/3 ${message.role === "user" ? "text-white" : message.role === "system" ? "bg-white text-white" : "p-8 shadow-lg bg-white text-lg text-black"}`}>
         {Array.isArray(message.content) ? (
           message.content.map((content, index) => (
             <React.Fragment key={index}>
               {content.type === "text" && <Typewriter text={content.text} />}
-              {content.type === "image_url" && <img src={content.image_url.url} alt={`Uploaded by ${message.role}`} className="mx-auto h-[60vh] object-cover rounded-lg"/>}
+              {content.type === "image_url" && <img src={content.image_url.url} alt={`Uploaded by ${message.role}`} className="mx-auto h-[60vh] object-cover rounded-xl"/>}
             </React.Fragment>
           ))
         ) : (
@@ -371,6 +396,7 @@ const payload = {
       <FontAwesomeIcon icon={faArrowUp} className="h-5 w-5" />
     )}
   </button>
+  
 </div>
 </div>
   );
