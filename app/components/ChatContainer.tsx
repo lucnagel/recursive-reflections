@@ -71,6 +71,21 @@ type ImageContent = {
   };
 };
 
+// LoadingDots Component
+function LoadingDots() {
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((current) => (current + 1) % 4); // Cycle from 0 to 3
+    }, 500); // Update every 500 milliseconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <span>{'.'.repeat(dotCount)}</span>;
+}
+
 function ChatContainer() {
   const [images, setImages] = useState<File[]>([]);
   const [message, setMessage] = useState("");
@@ -80,6 +95,8 @@ function ChatContainer() {
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
   const [selectedGPTStyle, setSelectedGPTStyle] = useState('ARTIE'); // default to ARTIE
+  
+  
 
 const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
   setSelectedGPTStyle(event.target.value);
@@ -176,7 +193,7 @@ const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<str
 // Construct the prompt based on selected GPT style
 const promptText = selectedGPTStyle === 'ARTIE' ?
   `Describe this image as though you're an art director responding to an email, your name is ARTIE. Keep it very short, limit your response to maximum 1000 characters. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.` :
-  `Describe this image as though you're a therapeutic psychoanalyst, named RORI. You are taking part in a Rorschach test. Start you response saying 'I see'. Focus on symbolic elements and describe what it might make you feel. Be sure to include comments on shapes, color use, and emotion conveyed. Your response should not exceed 1000 characters. Your feedback ranges from 1 which is very chill, to 10 which is very crazy. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`;
+  `Describe this image as though you're a therapeutic psychoanalyst, named RORI. You are taking part in a Rorschach test. Start you response saying 'I see'. Focus on symbolic elements and describe what it might make you feel. Be sure to include comments on shapes, color use, and emotion conveyed. Your response should not exceed 1000 characters. End with your name. Your feedback ranges from 1 which is very chill, to 10 which is very crazy. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`;
 
 const payload = {
   messages: [
@@ -241,7 +258,7 @@ const payload = {
 </div>
 
 <div className="absolute bottom-5 left-5 p-4">
-  <label htmlFor="feedback-intensity-slider" className="block text-sm text-black">Feedback Intensity: {feedbackIntensity}</label>
+  <label htmlFor="feedback-intensity-slider" className="block text-sm text-black">Response Intensity: {feedbackIntensity}</label>
   <div>
     <input
       type="range"
@@ -301,7 +318,7 @@ const payload = {
   <div {...getRootProps()} className="flex text-sm flex-col items-center justify-center border-dashed border-2 border-gray-300 rounded-md p-4">
     <input {...getInputProps()} disabled={isSending} />
     {isSending ? (
-      <p>Analyzing image...</p> // Text shown when image is being sent
+      <p>Analyzing image<LoadingDots /></p>// Text shown when image is being sent
     ) : (
       <p>Drag & drop an image, or click here to upload a file.</p> // Default text
     )}
