@@ -79,6 +79,12 @@ function ChatContainer() {
   const [feedbackIntensity, setFeedbackIntensity] = useState<number>(5); // State for slider value
   const chatContainerRef = useRef(null); // Adjust to directly reference the chat container div
   const endOfMessagesRef = useRef<HTMLElement | null>(null);
+  const [selectedGPTStyle, setSelectedGPTStyle] = useState('ARTIE'); // default to ARTIE
+
+const handleGPTStyleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+  setSelectedGPTStyle(event.target.value);
+};
+
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -166,21 +172,26 @@ function ChatContainer() {
     });
 
     const imageBase64Strings = await Promise.all(imagePromises);
-    // Construct the payload with base64 strings
-    const payload = {
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: `Describe this image as though you're an art director responding to an email, your name is ARTIE. Keep it very short, limit your response to maximum 1000 characters. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.`},
-            ...imageBase64Strings.map((base64) => ({
-              type: "image_url",
-              image_url: { url: base64 },
-            })),
-          ],
-        },
+
+// Construct the prompt based on selected GPT style
+const promptText = selectedGPTStyle === 'ARTIE' ?
+  `Describe this image as though you're an art director responding to an email, your name is ARTIE. Keep it very short, limit your response to maximum 1000 characters. Start your response with an email subject. Reply as though you're responding to the creative responsible for the image. Use industry jargon in your response. Mention the brand if you see any. Your feedback ranges from 1 which is very chill, to 10 which is very harsh. Don't mention your feedback intensity. Your feedback intensity is ${feedbackIntensity}.` :
+  `Describe this image as though you're a therapeutic psychoanalyst named RORI. Provide an abstract analysis, focusing on symbolic elements and how they contribute to the overall impression of someone's psyche. Be sure to include comments on shapes, color use, and emotion conveyed. Your critique should not exceed 1000 characters and should be suitable for a professional audience. Your feedback intensity is ${feedbackIntensity}.`;
+
+const payload = {
+  messages: [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: promptText },
+        ...imageBase64Strings.map((base64) => ({
+          type: "image_url",
+          image_url: { url: base64 },
+        })),
       ],
-    };
+    },
+  ],
+};
 
     try {
       // Send the message to the backend
@@ -217,10 +228,16 @@ function ChatContainer() {
   universestudio.xyz</div>
   <div className="absolute left-5 bottom-20 text-sm p-4 mb-1">
   <span className="text-sm mr-2">Select GPT:</span>
-  <select className="max-w-xs p-2 overflow-auto rounded-lg" aria-label="Default select example" defaultValue="1">
-    <option value="1">ARTIE</option>
-    <option value="2">RORI</option>
-  </select>
+  <select
+  className="max-w-xs p-2 overflow-auto rounded-lg"
+  aria-label="Default select example"
+  defaultValue="ARTIE"
+  onChange={handleGPTStyleChange}
+>
+  <option value="ARTIE">ARTIE</option>
+  <option value="RORI">RORI</option>
+</select>
+
 </div>
 
 <div className="absolute bottom-5 left-5 p-4">
@@ -284,7 +301,7 @@ function ChatContainer() {
   <div {...getRootProps()} className="flex text-sm flex-col items-center justify-center border-dashed border-2 border-gray-300 rounded-md p-4">
     <input {...getInputProps()} disabled={isSending} />
     {isSending ? (
-      <p>Analyzing image.</p> // Text shown when image is being sent
+      <p>Analyzing image...</p> // Text shown when image is being sent
     ) : (
       <p>Drag & drop an image, or click here to upload a file.</p> // Default text
     )}
